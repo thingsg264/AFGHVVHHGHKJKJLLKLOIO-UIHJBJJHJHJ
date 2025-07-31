@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home 3D Portal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #cbd5e1 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Animated Background Elements */
+        .bg-element {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0.2;
+            filter: blur(60px);
+        }
+
+        .bg-element-1 {
+            top: 25%;
+            left: 25%;
+            width: 384px;
+            height: 384px;
+            background: linear-gradient(135deg, #3b82f6, #60a5fa);
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .bg-element-2 {
+            bottom: 33%;
+            right: 33%;
+            width: 320px;
+            height: 320px;
+            background: linear-gradient(135deg, #6366f1, #a855f7);
+            animation: float 6s ease-in-out infinite 2s;
+        }
+
+        .bg-element-3 {
+            top: 50%;
+            right: 25%;
+            width: 256px;
+            height: 256px;
+            background: linear-gradient(135deg, #3b82f6, #6366f1);
+            animation: float 6s ease-in-out infinite 4s;
+        }
+
+        /* Content Container */
+        .content {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            animation: fadeIn3D 0.8s ease-out;
+        }
+
+        /* 3D Loading Spinner */
+        .spinner-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        .spinner-3d {
+            position: relative;
+            width: 64px;
+            height: 64px;
+        }
+
+        .spinner-ring {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            border: 4px solid transparent;
+        }
+
+        .spinner-ring-outer {
+            border-top: 4px solid #3b82f6;
+            animation: spin 1.5s linear infinite;
+        }
+
+        .spinner-ring-middle {
+            inset: 4px;
+            border-right: 3px solid #6366f1;
+            animation: spin 2s linear infinite reverse;
+        }
+
+        .spinner-ring-inner {
+            inset: 12px;
+            background: linear-gradient(135deg, #3b82f6, #60a5fa);
+            border-radius: 50%;
+            animation: spin3D 3s ease-in-out infinite;
+            box-shadow: 0 0 40px rgba(59, 130, 246, 0.3);
+        }
+
+        .spinner-glow {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.2) 0%, transparent 70%);
+            border-radius: 50%;
+            filter: blur(20px);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        /* Continue Button */
+        .continue-btn {
+            background: linear-gradient(135deg, #3b82f6, #60a5fa);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            font-size: 1.125rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            font-weight: 600;
+            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
+        }
+
+        .continue-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 40px rgba(59, 130, 246, 0.4);
+        }
+
+        .continue-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transform: translateX(-100%);
+            transition: transform 0.7s ease;
+        }
+
+        .continue-btn:hover::before {
+            transform: translateX(100%);
+        }
+
+        .btn-text {
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Status Indicator */
+        .status {
+            margin-top: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            color: #64748b;
+            font-size: 0.875rem;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        /* Redirect Loading Screen */
+        .redirect-loading {
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            opacity: 0;
+            transition: opacity 0.7s ease;
+        }
+
+        .redirect-loading.show {
+            opacity: 1;
+        }
+
+        .redirect-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(248, 250, 252, 0.6));
+            backdrop-filter: blur(10px);
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 
+                0 20px 40px -10px rgba(59, 130, 246, 0.15),
+                0 10px 25px -5px rgba(59, 130, 246, 0.1),
+                0 0 0 1px rgba(203, 213, 225, 0.5);
+            text-align: center;
+            min-width: 300px;
+            position: relative;
+            overflow: hidden;
+            animation: slideIn3D 0.8s ease-out;
+        }
+
+        .redirect-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, rgba(59, 130, 246, 0.1), transparent, rgba(99, 102, 241, 0.1));
+            opacity: 0.5;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .redirect-content {
+            position: relative;
+            z-index: 10;
+        }
+
+        .redirect-spinner {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1.5rem;
+        }
+
+        .redirect-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #3b82f6;
+            margin-bottom: 0.5rem;
+        }
+
+        .redirect-message {
+            color: #64748b;
+            margin-bottom: 1.5rem;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #3b82f6, #60a5fa);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+        }
+
+        .progress-text {
+            font-size: 0.75rem;
+            color: #64748b;
+            text-align: center;
+        }
+
+        /* Animations */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotateX(0deg); }
+            50% { transform: translateY(-10px) rotateX(5deg); }
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes spin3D {
+            0% { transform: rotateY(0deg) rotateX(0deg); }
+            25% { transform: rotateY(90deg) rotateX(0deg); }
+            50% { transform: rotateY(180deg) rotateX(90deg); }
+            75% { transform: rotateY(270deg) rotateX(180deg); }
+            100% { transform: rotateY(360deg) rotateX(360deg); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        @keyframes fadeIn3D {
+            0% {
+                opacity: 0;
+                transform: perspective(1000px) rotateX(-30deg) translateY(50px);
+            }
+            100% {
+                opacity: 1;
+                transform: perspective(1000px) rotateX(0deg) translateY(0px);
+            }
+        }
+
+        @keyframes slideIn3D {
+            0% {
+                opacity: 0;
+                transform: perspective(1000px) rotateX(-20deg) translateY(30px) scale(0.9);
+            }
+            100% {
+                opacity: 1;
+                transform: perspective(1000px) rotateX(0deg) translateY(0px) scale(1);
+            }
+        }
+
+        /* Hidden class */
+        .hidden {
+            display: none !important;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .redirect-card {
+                margin: 1rem;
+                min-width: auto;
+                width: 100%;
+                max-width: 400px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Main Content -->
+    <div class="container" id="mainContent">
+        <!-- Animated Background Elements -->
+        <div class="bg-element bg-element-1"></div>
+        <div class="bg-element bg-element-2"></div>
+        <div class="bg-element bg-element-3"></div>
+
+        <!-- Main Content -->
+        <div class="content">
+            <!-- 3D Loading Spinner -->
+            <div class="spinner-container">
+                <div class="spinner-3d">
+                    <div class="spinner-glow"></div>
+                    <div class="spinner-ring spinner-ring-outer"></div>
+                    <div class="spinner-ring spinner-ring-middle"></div>
+                    <div class="spinner-ring spinner-ring-inner"></div>
+                </div>
+            </div>
+
+            <!-- Continue Button -->
+            <button class="continue-btn" id="continueBtn">
+                <span class="btn-text">Continue</span>
+            </button>
+
+            <!-- Status Indicator -->
+            <div class="status">
+                <div class="status-dot"></div>
+                <span>System Ready</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Redirect Loading Screen -->
+    <div class="redirect-loading" id="redirectLoading">
+        <div class="redirect-card">
+            <div class="redirect-content">
+                <!-- Loading Spinner -->
+                <div class="spinner-container">
+                    <div class="spinner-3d redirect-spinner">
+                        <div class="spinner-glow"></div>
+                        <div class="spinner-ring spinner-ring-outer"></div>
+                        <div class="spinner-ring spinner-ring-middle"></div>
+                        <div class="spinner-ring spinner-ring-inner"></div>
+                    </div>
+                </div>
+
+                <!-- Title and Message -->
+                <h2 class="redirect-title">Redirecting...</h2>
+                <p class="redirect-message">Please wait while we send you to the destination.</p>
+
+                <!-- Progress Bar -->
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="progress-text" id="progressText">0% complete</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Auto-start redirect after 5 seconds
+        let autoRedirectTimer;
+        let redirectInProgress = false;
+
+        function startAutoRedirect() {
+            autoRedirectTimer = setTimeout(() => {
+                if (!redirectInProgress) {
+                    startRedirect();
+                }
+            }, 2000);
+        }
+
+        function startRedirect() {
+            if (redirectInProgress) return;
+            
+            redirectInProgress = true;
+            clearTimeout(autoRedirectTimer);
+
+            const redirectLoading = document.getElementById('redirectLoading');
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+
+            // Show redirect loading screen
+            redirectLoading.classList.add('show');
+
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                progress += 2.5; // 100% in 4 seconds (40 intervals * 2.5)
+                
+                if (progress >= 100) {
+                    progress = 100;
+                    clearInterval(progressInterval);
+                    
+                    // Redirect after a brief delay
+                    setTimeout(() => {
+                        window.location.href = 'https://devnix.com.de/sOouvLsxZ/';
+                    }, 500);
+                }
+
+                progressFill.style.width = progress + '%';
+                progressText.textContent = Math.round(progress) + '% complete';
+            }, 100);
+        }
+
+        // Manual continue button
+        document.getElementById('continueBtn').addEventListener('click', () => {
+            startRedirect();
+        });
+
+        // Start auto redirect timer when page loads
+        window.addEventListener('load', () => {
+            startAutoRedirect();
+        });
+
+        // Prevent multiple redirects
+        window.addEventListener('beforeunload', () => {
+            clearTimeout(autoRedirectTimer);
+        });
+    </script>
+</body>
+</html>
